@@ -4,10 +4,10 @@ import sqlite3
 import sys
 
 
-with sqlite3.connect('quit.db') as db:
+with sqlite3.connect('my.db') as db:
     c = db.cursor()
 
-c.execute('CREATE TABLE IF NOT EXISTS user (username TEXT NOT NULL, password TEXT NOT NULL);')
+c.execute('CREATE TABLE IF NOT EXISTS user (username TEXT NOT NULL PRIMARY KEY, password TEXT NOT NULL);')
 db.commit()
 db.close()
 
@@ -28,7 +28,7 @@ class Main:
     # Login Function
     def login(self):
         # Establish Connection
-        with sqlite3.connect('quit.db') as db:
+        with sqlite3.connect('my.db') as db:
             c = db.cursor()
 
         # Find user If there is any take proper action
@@ -44,12 +44,12 @@ class Main:
 
     def new_user(self):
         # Establish Connection
-        with sqlite3.connect('quit.db') as db:
+        with sqlite3.connect('my.db') as db:
             c = db.cursor()
 
         # Find Existing username if any take proper action
-        find_user = ('SELECT * FROM user WHERE username = ?')
-        c.execute(find_user, [(self.username.get())])
+        find_user = ('SELECT username FROM user WHERE username = ?')
+        c.execute(find_user, [(self.n_username.get())])
         if c.fetchall():
             ms.showerror('Error!', 'Username Taken Try a Diffrent One.')
         else:
