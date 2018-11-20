@@ -1,29 +1,46 @@
 import tkinter as tk
 from tkinter import messagebox as ms
 import sqlite3
-import sys
+import sys, os
 
 
 with sqlite3.connect('my.db') as db:
     c = db.cursor()
 
-c.execute('CREATE TABLE IF NOT EXISTS user (username TEXT NOT NULL PRIMARY KEY, password TEXT NOT NULL);')
+
+c.execute("CREATE TABLE IF NOT EXISTS user(username TEXT NOT NULL, name TEXT NOT NULL, surname TEXT NOT NULL, password TEXT NOT NULL);")
 db.commit()
 db.close()
 
 
+mycolor = '#%02x%02x%02x' %(0, 173, 239)
+
+
+
+
 
 class Main:
+
     def __init__(self, master):
         # Window
         self.master = master
         # Some Usefull variables
         self.username = tk.StringVar()
+        self.name = tk.StringVar()
+        self.surname = tk.StringVar()
         self.password = tk.StringVar()
         self.n_username = tk.StringVar()
         self.n_password = tk.StringVar()
         # Create Widgets
         self.widgets()
+
+    #def register_day(self):
+       # with sqlite3.connect('my.db') as db:
+        #    c = db.cursor()
+
+        #TODO check what date it is
+        #TODO check if date is in table
+        #TODO if not in table, enter the date
 
     # Login Function
     def login(self):
@@ -36,9 +53,10 @@ class Main:
         c.execute(find_user, [(self.username.get()), (self.password.get())])
         result = c.fetchall()
         if result:
-            self.logf.pack_forget()
-            self.head['text'] = self.username.get() + '\n Loged In'
-            self.head['pady'] = 150
+            [x.destroy() for x in self.master.slaves()]
+            temp1 = tk.Label(self.master.geometry('250x125'), text='Hello ' + self.username.get())
+            temp2 = tk.Button(self.master, text='OK')
+            temp1.pack(), temp2.pack()
         else:
             ms.showerror('Oops!', 'Username Not Found.')
 
@@ -48,16 +66,16 @@ class Main:
             c = db.cursor()
 
         # Find Existing username if any take proper action
-        find_user = ('SELECT username FROM user WHERE username = ?')
-        c.execute(find_user, [(self.n_username.get())])
+        find_user = ("SELECT DISTINCT username, name, surname  FROM user WHERE username = ? and name = ? and surname = ?")
+        c.execute(find_user, [(self.n_username.get()), (self.name.get()), (self.surname.get())])
         if c.fetchall():
             ms.showerror('Error!', 'Username Taken Try a Diffrent One.')
         else:
             ms.showinfo('Success!', 'Account Created!')
             self.log()
         # Create New Account
-        insert = 'INSERT INTO user(username,password) VALUES(?,?)'
-        c.execute(insert, [(self.n_username.get()), (self.n_password.get())])
+        insert = ("INSERT INTO user (username, name, surname, password) VALUES(?, ?, ?, ?)")
+        c.execute(insert, [(self.n_username.get()), (self.name.get()), (self.surname.get()), (self.n_password.get())])
         db.commit()
 
 
@@ -71,6 +89,8 @@ class Main:
 
     def cr(self):
         self.n_username.set('')
+        self.name.set('')
+        self.surname.set('')
         self.n_password.set('')
         self.logf.pack_forget()
         self.head['text'] = 'Create Account'
@@ -93,10 +113,14 @@ class Main:
         self.crf = tk.Frame(self.master, padx=10, pady=10)
         tk.Label(self.crf, text='Username: ', font=('', 20), pady=5, padx=5).grid(sticky='W')
         tk.Entry(self.crf, textvariable=self.n_username, bd=5, font=('', 15)).grid(row=0, column=1)
+        tk.Label(self.crf, text='Name: ', font=('', 20), pady=5, padx=5).grid(sticky='W')
+        tk.Entry(self.crf, textvariable=self.name, bd=5, font=('', 15)).grid(row=1, column=1)
+        tk.Label(self.crf, text='Surname: ', font=('', 20), pady=5, padx=5).grid(sticky='W')
+        tk.Entry(self.crf, textvariable=self.surname, bd=5, font=('', 15)).grid(row=2, column=1)
         tk.Label(self.crf, text='Password: ', font=('', 20), pady=5, padx=5).grid(sticky='W')
-        tk.Entry(self.crf, textvariable=self.n_password, bd=5, font=('', 15), show='*').grid(row=1, column=1)
+        tk.Entry(self.crf, textvariable=self.n_password, bd=5, font=('', 15), show='*').grid(row=3, column=1)
         tk.Button(self.crf, text='Create Account', bd=3, font=('', 15), padx=5, pady=5, command=self.new_user).grid()
-        tk.Button(self.crf, text='Go to Login', bd=3, font=('', 15), padx=5, pady=5, command=self.log).grid(row=2,
+        tk.Button(self.crf, text='Go to Login', bd=3, font=('', 15), padx=5, pady=5, command=self.log).grid(row=4,
                                                                                                          column=1)
 
 
