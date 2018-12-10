@@ -1,14 +1,16 @@
 import tkinter as tk
 from tkinter import messagebox as ms
 import sqlite3
+import datetime
+from xlsxwriter.workbook import Workbook
 import sys, os
 
 
 with sqlite3.connect('my.db') as db:
     c = db.cursor()
 
-
-c.execute("CREATE TABLE IF NOT EXISTS user(username TEXT NOT NULL, name TEXT NOT NULL, surname TEXT NOT NULL, password TEXT NOT NULL);")
+#CHANGE USERNAME FOR PRIMARY KEY
+c.execute("CREATE TABLE IF NOT EXISTS user(username TEXT NOT NULL, name TEXT NOT NULL, surname TEXT NOT NULL, password TEXT NOT NULL, employee_id INTEGER PRIMARY KEY);")
 db.commit()
 db.close()
 
@@ -34,13 +36,54 @@ class Main:
         # Create Widgets
         self.widgets()
 
-    #def register_day(self):
-       # with sqlite3.connect('my.db') as db:
-        #    c = db.cursor()
+    def generate_report(self):
 
-        #TODO check what date it is
-        #TODO check if date is in table
-        #TODO if not in table, enter the date
+        with sqlite3.connect('my.db') as db:
+            c = db.cursor()
+        name_select = ("SELECT * FROM shifts WHERE name = ? AND surname = ?;")
+        db_to_xls = c.execute(name_select, [(self.name.get()), (self.surname.get())])
+
+        wb = Workbook('moje_zmiany.xlsx')
+        ws = wb.add_worksheet()
+        bold = wb.add_format({'bold':True})
+        ws.write('A1', 'Imię', bold)
+        ws.write('B1', 'Nazwisko', bold)
+        ws.write('C1', 'Data', bold)
+
+        for i, row in enumerate(db_to_xls):
+            for j, value in enumerate(row):
+                ws.write(i+1, j, value)
+
+        wb.close()
+
+        #todo everytime after generating - drop table before next month
+
+    def register_day(self):
+
+        date = str(datetime.date.today())
+
+        with sqlite3.connect('my.db') as db:
+            c = db.cursor()
+
+            c.execute("""CREATE TABLE IF NOT EXISTS shifts
+            (name TEXT,
+            surname TEXT,
+            date TEXT,
+            FOREIGN KEY (name) REFERENCES user(name),
+            FOREIGN KEY (surname) REFERENCES user(surname));""")
+
+
+            saving_date = ("""INSERT INTO shifts (name, surname, date) VALUES (?, ?, ?)""")
+            c.execute(saving_date, ((self.name.get()), (self.surname.get()), date))
+
+        db.commit()
+        c.close()
+        db.close()
+        self.generate_report()
+
+        ms.showinfo('Zapis zmiany', 'Data zapisana')
+        self.master.destroy()
+
 
     # Login Function
     def login(self):
@@ -53,9 +96,11 @@ class Main:
         c.execute(find_user, [(self.username.get()), (self.password.get())])
         result = c.fetchall()
         if result:
+            self.name.set(result[0][1])
+            self.surname.set(result[0][2])
             [x.destroy() for x in self.master.slaves()]
-            temp1 = tk.Label(self.master.geometry('250x125'), text='Hello ' + self.username.get())
-            temp2 = tk.Button(self.master, text='OK')
+            temp1 = tk.Label(self.master.geometry('250x125'), text='Czy dziś jest twoja zmiana ' + self.username.get() + '?')
+            temp2 = tk.Button(self.master, text='OK', command= self.register_day)
             temp1.pack(), temp2.pack()
         else:
             ms.showerror('Oops!', 'Username Not Found.')
@@ -66,7 +111,7 @@ class Main:
             c = db.cursor()
 
         # Find Existing username if any take proper action
-        find_user = ("SELECT DISTINCT username, name, surname  FROM user WHERE username = ? and name = ? and surname = ?")
+        find_user = ("SELECT DISTINCT username, name, surname FROM user WHERE username = ? and name = ? and surname = ? ")
         c.execute(find_user, [(self.n_username.get()), (self.name.get()), (self.surname.get())])
         if c.fetchall():
             ms.showerror('Error!', 'Username Taken Try a Diffrent One.')
@@ -74,9 +119,9 @@ class Main:
             ms.showinfo('Success!', 'Account Created!')
             self.log()
         # Create New Account
-        insert = ("INSERT INTO user (username, name, surname, password) VALUES(?, ?, ?, ?)")
-        c.execute(insert, [(self.n_username.get()), (self.name.get()), (self.surname.get()), (self.n_password.get())])
-        db.commit()
+            insert = ("INSERT INTO user (username, name, surname, password) VALUES(?, ?, ?, ?)")
+            c.execute(insert, [(self.n_username.get()), (self.name.get()), (self.surname.get()), (self.n_password.get())])
+            db.commit()
 
 
 
@@ -122,6 +167,8 @@ class Main:
         tk.Button(self.crf, text='Create Account', bd=3, font=('', 15), padx=5, pady=5, command=self.new_user).grid()
         tk.Button(self.crf, text='Go to Login', bd=3, font=('', 15), padx=5, pady=5, command=self.log).grid(row=4,
                                                                                                          column=1)
+
+
 
 
 if __name__ == '__main__':
