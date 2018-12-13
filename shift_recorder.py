@@ -1,12 +1,10 @@
 import tkinter as tk
 from tkinter import messagebox as ms
+from xlsxwriter.workbook import Workbook
 import sqlite3
 import datetime
-from xlsxwriter.workbook import Workbook
-import sys, os
 
-
-with sqlite3.connect('my.db') as db:
+with sqlite3.connect('shifts.db') as db:
     c = db.cursor()
 
 #CHANGE USERNAME FOR PRIMARY KEY
@@ -15,10 +13,7 @@ db.commit()
 db.close()
 
 
-mycolor = '#%02x%02x%02x' %(0, 173, 239)
-
-
-
+mycolor = '#%02x%02x%02x' % (0, 173, 239)
 
 
 class Main:
@@ -26,7 +21,7 @@ class Main:
     def __init__(self, master):
         # Window
         self.master = master
-        # Some Usefull variables
+        # Some useful variables
         self.username = tk.StringVar()
         self.name = tk.StringVar()
         self.surname = tk.StringVar()
@@ -38,7 +33,7 @@ class Main:
 
     def generate_report(self):
 
-        with sqlite3.connect('my.db') as db:
+        with sqlite3.connect('shifts.db') as db:
             c = db.cursor()
         name_select = ("SELECT * FROM shifts WHERE name = ? AND surname = ?;")
         db_to_xls = c.execute(name_select, [(self.name.get()), (self.surname.get())])
@@ -56,13 +51,13 @@ class Main:
 
         wb.close()
 
-        #todo everytime after generating - drop table before next month
+        # TODO every time after generating - drop table before next month
 
     def register_day(self):
 
         date = str(datetime.date.today())
 
-        with sqlite3.connect('my.db') as db:
+        with sqlite3.connect('shifts.db') as db:
             c = db.cursor()
 
             c.execute("""CREATE TABLE IF NOT EXISTS shifts
@@ -71,7 +66,6 @@ class Main:
             date TEXT,
             FOREIGN KEY (name) REFERENCES user(name),
             FOREIGN KEY (surname) REFERENCES user(surname));""")
-
 
             saving_date = ("""INSERT INTO shifts (name, surname, date) VALUES (?, ?, ?)""")
             c.execute(saving_date, ((self.name.get()), (self.surname.get()), date))
@@ -84,11 +78,10 @@ class Main:
         ms.showinfo('Zapis zmiany', 'Data zapisana')
         self.master.destroy()
 
-
     # Login Function
     def login(self):
         # Establish Connection
-        with sqlite3.connect('my.db') as db:
+        with sqlite3.connect('shifts.db') as db:
             c = db.cursor()
 
         # Find user If there is any take proper action
@@ -107,7 +100,7 @@ class Main:
 
     def new_user(self):
         # Establish Connection
-        with sqlite3.connect('my.db') as db:
+        with sqlite3.connect('shifts.db') as db:
             c = db.cursor()
 
         # Find Existing username if any take proper action
@@ -122,8 +115,6 @@ class Main:
             insert = ("INSERT INTO user (username, name, surname, password) VALUES(?, ?, ?, ?)")
             c.execute(insert, [(self.n_username.get()), (self.name.get()), (self.surname.get()), (self.n_password.get())])
             db.commit()
-
-
 
     def log(self):
         self.username.set('')
@@ -169,10 +160,10 @@ class Main:
                                                                                                          column=1)
 
 
-
-
 if __name__ == '__main__':
     root = tk.Tk()
     root.title('Login Form')
     Main(root)
     root.mainloop()
+
+

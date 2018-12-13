@@ -1,3 +1,4 @@
 .idea/
 venv
 my.db
+shifts.db
