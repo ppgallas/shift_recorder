@@ -1,10 +1,8 @@
 import tkinter as tk
 from tkinter import messagebox as ms
+from xlsxwriter.workbook import Workbook
 import sqlite3
 import datetime
-from xlsxwriter.workbook import Workbook
-import sys, os
-
 
 with sqlite3.connect('my.db') as db:
     c = db.cursor()
@@ -16,9 +14,6 @@ db.close()
 
 
 mycolor = '#%02x%02x%02x' %(0, 173, 239)
-
-
-
 
 
 class Main:
@@ -169,10 +164,9 @@ class Main:
                                                                                                          column=1)
 
 
-
-
 if __name__ == '__main__':
     root = tk.Tk()
     root.title('Login Form')
     Main(root)
     root.mainloop()
+
