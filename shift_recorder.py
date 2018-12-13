@@ -16,7 +16,7 @@ db.close()
 mycolor = '#%02x%02x%02x' % (0, 173, 239)
 
 
-class Main:
+class MainWindow:
 
     def __init__(self, master):
         # Window
@@ -79,7 +79,7 @@ class Main:
         self.master.destroy()
 
     # Login Function
-    def login(self):
+    def client_login(self):
         # Establish Connection
         with sqlite3.connect('shifts.db') as db:
             c = db.cursor()
@@ -92,13 +92,13 @@ class Main:
             self.name.set(result[0][1])
             self.surname.set(result[0][2])
             [x.destroy() for x in self.master.slaves()]
-            temp1 = tk.Label(self.master.geometry('250x125'), text='Czy dziś jest twoja zmiana ' + self.username.get() + '?')
-            temp2 = tk.Button(self.master, text='OK', command= self.register_day)
-            temp1.pack(), temp2.pack()
+            label1 = tk.Label(self.master.geometry('250x125'), text='Is your shift today' + self.username.get() + '?')
+            ok_button = tk.Button(self.master, text='OK', command=self.register_day)
+            label1.pack(), ok_button.pack()
         else:
-            ms.showerror('Oops!', 'Username Not Found.')
+            ms.showerror('Oops!', 'Username not found.')
 
-    def new_user(self):
+    def add_new_user(self):
         # Establish Connection
         with sqlite3.connect('shifts.db') as db:
             c = db.cursor()
@@ -107,9 +107,9 @@ class Main:
         find_user = ("SELECT DISTINCT username, name, surname FROM user WHERE username = ? and name = ? and surname = ? ")
         c.execute(find_user, [(self.n_username.get()), (self.name.get()), (self.surname.get())])
         if c.fetchall():
-            ms.showerror('Error!', 'Username Taken Try a Diffrent One.')
+            ms.showerror('Error!', 'Username taken try a different one, please.')
         else:
-            ms.showinfo('Success!', 'Account Created!')
+            ms.showinfo('Success!', 'Account created!')
             self.log()
         # Create New Account
             insert = ("INSERT INTO user (username, name, surname, password) VALUES(?, ?, ?, ?)")
@@ -141,7 +141,7 @@ class Main:
         tk.Entry(self.logf, textvariable=self.username, bd=5, font=('', 15)).grid(row=0, column=1)
         tk.Label(self.logf, text='Password: ', font=('', 20), pady=5, padx=5).grid(sticky='W')
         tk.Entry(self.logf, textvariable=self.password, bd=5, font=('', 15), show='*').grid(row=1, column=1)
-        tk.Button(self.logf, text=' Login ', bd=3, font=('', 15), padx=5, pady=5, command=self.login).grid()
+        tk.Button(self.logf, text=' Login ', bd=3, font=('', 15), padx=5, pady=5, command=self.client_login).grid()
         tk.Button(self.logf, text=' Create Account ', bd=3, font=('', 15), padx=5, pady=5, command=self.cr).grid(row=2,
                                                                                                               column=1)
         self.logf.pack()
@@ -155,15 +155,15 @@ class Main:
         tk.Entry(self.crf, textvariable=self.surname, bd=5, font=('', 15)).grid(row=2, column=1)
         tk.Label(self.crf, text='Password: ', font=('', 20), pady=5, padx=5).grid(sticky='W')
         tk.Entry(self.crf, textvariable=self.n_password, bd=5, font=('', 15), show='*').grid(row=3, column=1)
-        tk.Button(self.crf, text='Create Account', bd=3, font=('', 15), padx=5, pady=5, command=self.new_user).grid()
+        tk.Button(self.crf, text='Create Account', bd=3, font=('', 15), padx=5, pady=5, command=self.add_new_user).grid()
         tk.Button(self.crf, text='Go to Login', bd=3, font=('', 15), padx=5, pady=5, command=self.log).grid(row=4,
                                                                                                          column=1)
 
 
 if __name__ == '__main__':
     root = tk.Tk()
-    root.title('Login Form')
-    Main(root)
+    root.title('Login form - Shift recorder')
+    MainWindow(root)
     root.mainloop()
 
 
