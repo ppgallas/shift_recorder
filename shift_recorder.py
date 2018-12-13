@@ -67,7 +67,6 @@ class Main:
             FOREIGN KEY (name) REFERENCES user(name),
             FOREIGN KEY (surname) REFERENCES user(surname));""")
 
-
             saving_date = ("""INSERT INTO shifts (name, surname, date) VALUES (?, ?, ?)""")
             c.execute(saving_date, ((self.name.get()), (self.surname.get()), date))
 
@@ -82,7 +81,7 @@ class Main:
     # Login Function
     def login(self):
         # Establish Connection
-        with sqlite3.connect('my.db') as db:
+        with sqlite3.connect('shifts.db') as db:
             c = db.cursor()
 
         # Find user If there is any take proper action
@@ -166,4 +165,5 @@ if __name__ == '__main__':
     root.title('Login Form')
     Main(root)
     root.mainloop()
+
 
