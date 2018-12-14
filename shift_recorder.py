@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox as ms
-from xlsxwriter.workbook import workbook
+from xlsxwriter.workbook import Workbook
 import sqlite3 as lite
 import datetime
 
@@ -27,24 +27,25 @@ class MainWindow:
             c1 = conn1.cursor()
             name_select = '''SELECT * FROM shifts WHERE name = ? AND surname = ?;'''
             db_to_xls = c1.execute(name_select, [self.name.get(), self.surname.get()])
+            wb = Workbook('moje_zmiany.xlsx')
+            ws = wb.add_worksheet()
+            bold = wb.add_format({'bold': True})
+            ws.write('A1', 'Imię', bold)
+            ws.write('B1', 'Nazwisko', bold)
+            ws.write('C1', 'Data', bold)
+
+            for i, row in enumerate(db_to_xls):
+                for j, value in enumerate(row):
+                    ws.write(i + 1, j, value)
+
+            wb.close()
         except lite.Error as e:
-            print("An error occured : ", e.args[0])
+            print("An error occurred : ", e.args[0])
         finally:
             c1.close()
             conn1.close()
 
-        wb = workbook('moje_zmiany.xlsx')
-        ws = wb.add_worksheet()
-        bold = wb.add_format({'bold': True})
-        ws.write('A1', 'Imię', bold)
-        ws.write('B1', 'Nazwisko', bold)
-        ws.write('C1', 'Data', bold)
 
-        for i, row in enumerate(db_to_xls):
-            for j, value in enumerate(row):
-                ws.write(i + 1, j, value)
-
-        wb.close()
 
         # TODO every time after generating - drop table before next month
 
@@ -59,7 +60,7 @@ class MainWindow:
                             FOREIGN KEY (name) REFERENCES user(name),
                             FOREIGN KEY (surname) REFERENCES user(surname));''')
             saving_date = '''INSERT INTO shifts (name, surname, date) VALUES (?, ?, ?)'''
-            c2.execute(saving_date, self.name.get(), self.surname.get(), date)
+            c2.execute(saving_date, [self.name.get(), self.surname.get(), date])
             conn2.commit()
             c2.close()
         except lite.Error as e:
