@@ -35,8 +35,8 @@ class MainWindow:
 
         with sqlite3.connect('shifts.db') as db:
             c = db.cursor()
-        name_select = ("SELECT * FROM shifts WHERE name = ? AND surname = ?;")
-        db_to_xls = c.execute(name_select, [(self.name.get()), (self.surname.get())])
+            name_select = ("SELECT * FROM shifts WHERE name = ? AND surname = ?;")
+            db_to_xls = c.execute(name_select, [(self.name.get()), (self.surname.get())])
 
         wb = Workbook('moje_zmiany.xlsx')
         ws = wb.add_worksheet()
@@ -84,10 +84,11 @@ class MainWindow:
         with sqlite3.connect('shifts.db') as db:
             c = db.cursor()
 
-        # Find user If there is any take proper action
-        find_user = ('SELECT * FROM user WHERE username = ? and password = ?')
-        c.execute(find_user, [(self.username.get()), (self.password.get())])
-        result = c.fetchall()
+            # Find user If there is any take proper action
+            find_user = ('SELECT * FROM user WHERE username = ? and password = ?')
+            c.execute(find_user, [(self.username.get()), (self.password.get())])
+            result = c.fetchall()
+
         if result:
             self.name.set(result[0][1])
             self.surname.set(result[0][2])
@@ -103,18 +104,18 @@ class MainWindow:
         with sqlite3.connect('shifts.db') as db:
             c = db.cursor()
 
-        # Find Existing username if any take proper action
-        find_user = ("SELECT DISTINCT username, name, surname FROM user WHERE username = ? and name = ? and surname = ? ")
-        c.execute(find_user, [(self.n_username.get()), (self.name.get()), (self.surname.get())])
-        if c.fetchall():
-            ms.showerror('Error!', 'Username taken try a different one, please.')
-        else:
-            ms.showinfo('Success!', 'Account created!')
-            self.log()
-        # Create New Account
-            insert = ("INSERT INTO user (username, name, surname, password) VALUES(?, ?, ?, ?)")
-            c.execute(insert, [(self.n_username.get()), (self.name.get()), (self.surname.get()), (self.n_password.get())])
-            db.commit()
+            # Find Existing username if any take proper action
+            find_user = ("SELECT DISTINCT username, name, surname FROM user WHERE username = ? and name = ? and surname = ? ")
+            c.execute(find_user, [(self.n_username.get()), (self.name.get()), (self.surname.get())])
+            if c.fetchall():
+                ms.showerror('Error!', 'Username taken try a different one, please.')
+            else:
+                ms.showinfo('Success!', 'Account created!')
+                self.log()
+            # Create New Account
+                insert = ("INSERT INTO user (username, name, surname, password) VALUES(?, ?, ?, ?)")
+                c.execute(insert, [(self.n_username.get()), (self.name.get()), (self.surname.get()), (self.n_password.get())])
+                db.commit()
 
     def log(self):
         self.username.set('')
