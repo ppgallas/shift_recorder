@@ -2,7 +2,13 @@ import tkinter as tk
 from tkinter import messagebox as ms
 from xlsxwriter.workbook import Workbook
 import sqlite3 as lite
+import hashlib as hsh
 import datetime
+
+
+def encrypt_password(password):
+    print(hsh.sha1(password.encode('UTF-8')).hexdigest())
+    return hsh.sha1(password.encode('UTF-8')).hexdigest()
 
 
 class MainWindow:
@@ -74,21 +80,22 @@ class MainWindow:
     # Login Function
     def client_login(self):
 
-        try :
+        try:
             # Establish Connection
             conn3 = lite.connect('shifts.db')
             c3 = conn3.cursor()
 
             # Find user If there is any take proper action
             find_user = 'SELECT * FROM user WHERE username = ? and password = ?'
-            c3.execute(find_user, [self.username.get(), self.password.get()])
+            print("password", self.password.get())
+            c3.execute(find_user, [self.username.get(), encrypt_password(self.password.get())])
             result = c3.fetchall()
 
             if result:
                 self.name.set(result[0][1])
                 self.surname.set(result[0][2])
                 [x.destroy() for x in self.master.slaves()]
-                label1 = tk.Label(self.master.geometry('250x125'), text='Is your shift today' + self.username.get() + '?')
+                label1 = tk.Label(self.master.geometry('250x125'), text='Is your shift today' + self.username.get()+'?')
                 ok_button = tk.Button(self.master, text='OK', command=self.register_day)
                 label1.pack(), ok_button.pack()
             else:
@@ -114,8 +121,12 @@ class MainWindow:
             else:
                 ms.showinfo('Success!', 'Account created!')
                 self.log()
+
+                # defined a function for encrypting password
+                conn4.create_function('encrypt', 1, encrypt_password)
+
                 # Create New Account
-                insert = '''INSERT INTO user (username, name, surname, password) VALUES(?, ?, ?, ?)'''
+                insert = '''INSERT INTO user (username, name, surname, password) VALUES(?, ?, ?, encrypt(?))'''
                 c4.execute(insert, [self.n_username.get(), self.name.get(), self.surname.get(), self.n_password.get()])
                 conn4.commit()
         except lite.Error as e:
