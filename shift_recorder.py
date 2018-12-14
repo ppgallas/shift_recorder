@@ -7,7 +7,6 @@ import datetime
 
 
 def encrypt_password(password):
-    print(hsh.sha1(password.encode('UTF-8')).hexdigest())
     return hsh.sha1(password.encode('UTF-8')).hexdigest()
 
 
@@ -96,7 +95,6 @@ class MainWindow:
 
             # Find user If there is any take proper action
             find_user = 'SELECT * FROM user WHERE username = ? and password = ?'
-            print("password", self.password.get())
             c3.execute(find_user, [self.username.get(), encrypt_password(self.password.get())])
             result = c3.fetchall()
 
