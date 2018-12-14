@@ -4,17 +4,6 @@ from xlsxwriter.workbook import Workbook
 import sqlite3
 import datetime
 
-with sqlite3.connect('shifts.db') as db:
-    c = db.cursor()
-
-#CHANGE USERNAME FOR PRIMARY KEY
-c.execute("CREATE TABLE IF NOT EXISTS user(username TEXT NOT NULL, name TEXT NOT NULL, surname TEXT NOT NULL, password TEXT NOT NULL, employee_id INTEGER PRIMARY KEY);")
-db.commit()
-db.close()
-
-
-mycolor = '#%02x%02x%02x' % (0, 173, 239)
-
 
 class MainWindow:
 
@@ -35,12 +24,12 @@ class MainWindow:
 
         with sqlite3.connect('shifts.db') as db:
             c = db.cursor()
-            name_select = ("SELECT * FROM shifts WHERE name = ? AND surname = ?;")
+            name_select = '''SELECT * FROM shifts WHERE name = ? AND surname = ?;'''
             db_to_xls = c.execute(name_select, [(self.name.get()), (self.surname.get())])
 
         wb = Workbook('moje_zmiany.xlsx')
         ws = wb.add_worksheet()
-        bold = wb.add_format({'bold':True})
+        bold = wb.add_format({'bold': True})
         ws.write('A1', 'Imię', bold)
         ws.write('B1', 'Nazwisko', bold)
         ws.write('C1', 'Data', bold)
@@ -67,12 +56,12 @@ class MainWindow:
             FOREIGN KEY (name) REFERENCES user(name),
             FOREIGN KEY (surname) REFERENCES user(surname));""")
 
-            saving_date = ("""INSERT INTO shifts (name, surname, date) VALUES (?, ?, ?)""")
+            saving_date = '''INSERT INTO shifts (name, surname, date) VALUES (?, ?, ?)'''
             c.execute(saving_date, ((self.name.get()), (self.surname.get()), date))
 
-        db.commit()
-        c.close()
-        db.close()
+            db.commit()
+            c.close()
+
         self.generate_report()
 
         ms.showinfo('Zapis zmiany', 'Data zapisana')
@@ -85,8 +74,8 @@ class MainWindow:
             c = db.cursor()
 
             # Find user If there is any take proper action
-            find_user = ('SELECT * FROM user WHERE username = ? and password = ?')
-            c.execute(find_user, [(self.username.get()), (self.password.get())])
+            find_user = 'SELECT * FROM user WHERE username = ? and password = ?'
+            c.execute(find_user, [self.username.get(), self.password.get()])
             result = c.fetchall()
 
         if result:
@@ -105,7 +94,8 @@ class MainWindow:
             c = db.cursor()
 
             # Find Existing username if any take proper action
-            find_user = ("SELECT DISTINCT username, name, surname FROM user WHERE username = ? and name = ? and surname = ? ")
+            find_user = '''SELECT DISTINCT username, name, surname FROM user WHERE username = ? and name = ? 
+                            and surname = ? '''
             c.execute(find_user, [(self.n_username.get()), (self.name.get()), (self.surname.get())])
             if c.fetchall():
                 ms.showerror('Error!', 'Username taken try a different one, please.')
@@ -113,8 +103,8 @@ class MainWindow:
                 ms.showinfo('Success!', 'Account created!')
                 self.log()
             # Create New Account
-                insert = ("INSERT INTO user (username, name, surname, password) VALUES(?, ?, ?, ?)")
-                c.execute(insert, [(self.n_username.get()), (self.name.get()), (self.surname.get()), (self.n_password.get())])
+                insert = "INSERT INTO user (username, name, surname, password) VALUES(?, ?, ?, ?)"
+                c.execute(insert, [self.n_username.get(), self.name.get(), self.surname.get(), self.n_password.get()])
                 db.commit()
 
     def log(self):
@@ -162,6 +152,17 @@ class MainWindow:
 
 
 if __name__ == '__main__':
+
+    with sqlite3.connect('shifts.db') as db:
+        c = db.cursor()
+
+        # CHANGE USERNAME FOR PRIMARY KEY
+        c.execute('''CREATE TABLE IF NOT EXISTS user(username TEXT NOT NULL, name TEXT NOT NULL, surname TEXT NOT NULL, 
+                        password TEXT NOT NULL, employee_id INTEGER PRIMARY KEY);''')
+        db.commit()
+
+    mycolor = '#%02x%02x%02x' % (0, 173, 239)
+
     root = tk.Tk()
     root.title('Login form - Shift recorder')
     MainWindow(root)
