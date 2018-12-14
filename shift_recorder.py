@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox as ms
-from xlsxwriter.workbook import Workbook
+import xlsxwriter as xwr
 import sqlite3 as lite
 import hashlib as hsh
 import datetime
@@ -33,18 +33,27 @@ class MainWindow:
             c1 = conn1.cursor()
             name_select = '''SELECT * FROM shifts WHERE name = ? AND surname = ?;'''
             db_to_xls = c1.execute(name_select, [self.name.get(), self.surname.get()])
-            wb = Workbook('moje_zmiany.xlsx')
+
+            # Create an new Excel file and add a worksheet
+            wb = xwr.Workbook('moje_zmiany.xlsx')
             ws = wb.add_worksheet()
+
+            # Add a bold format to use to highlight cells
             bold = wb.add_format({'bold': True})
+
+            # write some text with formatting in bold for columns
             ws.write('A1', 'Imię', bold)
             ws.write('B1', 'Nazwisko', bold)
             ws.write('C1', 'Data', bold)
 
+            # Write the content of db to xlsx worksheet
             for i, row in enumerate(db_to_xls):
                 for j, value in enumerate(row):
                     ws.write(i + 1, j, value)
 
+            # close the handler
             wb.close()
+
         except lite.Error as e:
             conn1.rollback()
             print("An error occurred : ", e.args[0])
