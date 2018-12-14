@@ -40,15 +40,12 @@ class MainWindow:
 
             wb.close()
         except lite.Error as e:
+            conn1.rollback()
             print("An error occurred : ", e.args[0])
         finally:
-            c1.close()
             conn1.close()
 
-
-
-        # TODO every time after generating - drop table before next month
-
+    # TODO every time after generating - drop table before next month
     def register_day(self):
 
         date = str(datetime.date.today())
@@ -64,9 +61,9 @@ class MainWindow:
             conn2.commit()
             c2.close()
         except lite.Error as e:
+            conn2.rollback()
             print("An error occured :", e.args[0])
         finally:
-            c2.close()
             conn2.close()
 
         self.generate_report()
@@ -76,24 +73,31 @@ class MainWindow:
 
     # Login Function
     def client_login(self):
-        # Establish Connection
-        conn3 = lite.connect('shifts.db')
-        c3 = conn3.cursor()
 
-        # Find user If there is any take proper action
-        find_user = 'SELECT * FROM user WHERE username = ? and password = ?'
-        c3.execute(find_user, [self.username.get(), self.password.get()])
-        result = c3.fetchall()
+        try :
+            # Establish Connection
+            conn3 = lite.connect('shifts.db')
+            c3 = conn3.cursor()
 
-        if result:
-            self.name.set(result[0][1])
-            self.surname.set(result[0][2])
-            [x.destroy() for x in self.master.slaves()]
-            label1 = tk.Label(self.master.geometry('250x125'), text='Is your shift today' + self.username.get() + '?')
-            ok_button = tk.Button(self.master, text='OK', command=self.register_day)
-            label1.pack(), ok_button.pack()
-        else:
-            ms.showerror('Oops!', 'Username not found.')
+            # Find user If there is any take proper action
+            find_user = 'SELECT * FROM user WHERE username = ? and password = ?'
+            c3.execute(find_user, [self.username.get(), self.password.get()])
+            result = c3.fetchall()
+
+            if result:
+                self.name.set(result[0][1])
+                self.surname.set(result[0][2])
+                [x.destroy() for x in self.master.slaves()]
+                label1 = tk.Label(self.master.geometry('250x125'), text='Is your shift today' + self.username.get() + '?')
+                ok_button = tk.Button(self.master, text='OK', command=self.register_day)
+                label1.pack(), ok_button.pack()
+            else:
+                ms.showerror('Oops!', 'Username not found.')
+        except lite.Error as e:
+            conn3.rollback()
+            print("An error occurred : ", e.args[0])
+        finally:
+            conn3.close()
 
     def add_new_user(self):
         try:
@@ -115,9 +119,9 @@ class MainWindow:
                 c4.execute(insert, [self.n_username.get(), self.name.get(), self.surname.get(), self.n_password.get()])
                 conn4.commit()
         except lite.Error as e:
+            conn4.rollback()
             print("An error occurred : ", e.args[0])
         finally:
-            c4.close()
             conn4.close()
 
     def log(self):
@@ -166,6 +170,7 @@ class MainWindow:
 
 
 if __name__ == '__main__':
+
     try:
         conn0 = lite.connect('shifts.db')
         c0 = conn0.cursor()
@@ -175,9 +180,9 @@ if __name__ == '__main__':
                             password TEXT NOT NULL, employee_id INTEGER PRIMARY KEY);''')
         conn0.commit()
     except lite.Error as e:
+        conn0.rollback()
         print("An error occurred : ", e.args[0])
     finally:
-        c0.close()
         conn0.close()
 
     mycolor = '#%02x%02x%02x' % (0, 173, 239)
