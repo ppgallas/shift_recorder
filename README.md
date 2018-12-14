@@ -1,11 +1,7 @@
 # shift_recorder
 Application to record employees shifts
 
-### Some tasks 
+### Roadmap 
 
-- [ ] PEP 8 compliance
-- [x] some renaming 
-- [ ] exception handling 
-- [ ] factorize the use of sqlite3 code 
-
+Roadmap : https://github.com/Sim4n6/shift_recorder/projects/1
 
