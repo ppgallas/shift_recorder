@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox as ms
-from xlsxwriter.workbook import Workbook
-import sqlite3
+from xlsxwriter.workbook import workbook
+import sqlite3 as lite
 import datetime
 
 
@@ -22,12 +22,18 @@ class MainWindow:
 
     def generate_report(self):
 
-        with sqlite3.connect('shifts.db') as db:
-            c = db.cursor()
+        try:
+            conn1 = lite.connect('shifts.db')
+            c1 = conn1.cursor()
             name_select = '''SELECT * FROM shifts WHERE name = ? AND surname = ?;'''
-            db_to_xls = c.execute(name_select, [(self.name.get()), (self.surname.get())])
+            db_to_xls = c1.execute(name_select, [self.name.get(), self.surname.get()])
+        except lite.Error as e:
+            print("An error occured : ", e.args[0])
+        finally:
+            c1.close()
+            conn1.close()
 
-        wb = Workbook('moje_zmiany.xlsx')
+        wb = workbook('moje_zmiany.xlsx')
         ws = wb.add_worksheet()
         bold = wb.add_format({'bold': True})
         ws.write('A1', 'Imię', bold)
@@ -36,7 +42,7 @@ class MainWindow:
 
         for i, row in enumerate(db_to_xls):
             for j, value in enumerate(row):
-                ws.write(i+1, j, value)
+                ws.write(i + 1, j, value)
 
         wb.close()
 
@@ -46,21 +52,21 @@ class MainWindow:
 
         date = str(datetime.date.today())
 
-        with sqlite3.connect('shifts.db') as db:
-            c = db.cursor()
-
-            c.execute("""CREATE TABLE IF NOT EXISTS shifts
-            (name TEXT,
-            surname TEXT,
-            date TEXT,
-            FOREIGN KEY (name) REFERENCES user(name),
-            FOREIGN KEY (surname) REFERENCES user(surname));""")
-
+        try:
+            conn2 = lite.connect('shifts.db')
+            c2 = conn2.cursor()
+            c2.execute('''CREATE TABLE IF NOT EXISTS shifts (name TEXT, surname TEXT, date TEXT,
+                            FOREIGN KEY (name) REFERENCES user(name),
+                            FOREIGN KEY (surname) REFERENCES user(surname));''')
             saving_date = '''INSERT INTO shifts (name, surname, date) VALUES (?, ?, ?)'''
-            c.execute(saving_date, ((self.name.get()), (self.surname.get()), date))
-
-            db.commit()
-            c.close()
+            c2.execute(saving_date, self.name.get(), self.surname.get(), date)
+            conn2.commit()
+            c2.close()
+        except lite.Error as e:
+            print("An error occured :", e.args[0])
+        finally:
+            c2.close()
+            conn2.close()
 
         self.generate_report()
 
@@ -70,13 +76,13 @@ class MainWindow:
     # Login Function
     def client_login(self):
         # Establish Connection
-        with sqlite3.connect('shifts.db') as db:
-            c = db.cursor()
+        conn3 = lite.connect('shifts.db')
+        c3 = conn3.cursor()
 
-            # Find user If there is any take proper action
-            find_user = 'SELECT * FROM user WHERE username = ? and password = ?'
-            c.execute(find_user, [self.username.get(), self.password.get()])
-            result = c.fetchall()
+        # Find user If there is any take proper action
+        find_user = 'SELECT * FROM user WHERE username = ? and password = ?'
+        c3.execute(find_user, [self.username.get(), self.password.get()])
+        result = c3.fetchall()
 
         if result:
             self.name.set(result[0][1])
@@ -89,23 +95,29 @@ class MainWindow:
             ms.showerror('Oops!', 'Username not found.')
 
     def add_new_user(self):
-        # Establish Connection
-        with sqlite3.connect('shifts.db') as db:
-            c = db.cursor()
+        try:
+            # Establish Connection
+            conn4 = lite.connect('shifts.db')
+            c4 = conn4.cursor()
 
             # Find Existing username if any take proper action
             find_user = '''SELECT DISTINCT username, name, surname FROM user WHERE username = ? and name = ? 
                             and surname = ? '''
-            c.execute(find_user, [(self.n_username.get()), (self.name.get()), (self.surname.get())])
-            if c.fetchall():
+            c4.execute(find_user, [self.n_username.get(), self.name.get(), self.surname.get()])
+            if c4.fetchall():
                 ms.showerror('Error!', 'Username taken try a different one, please.')
             else:
                 ms.showinfo('Success!', 'Account created!')
                 self.log()
-            # Create New Account
-                insert = "INSERT INTO user (username, name, surname, password) VALUES(?, ?, ?, ?)"
-                c.execute(insert, [self.n_username.get(), self.name.get(), self.surname.get(), self.n_password.get()])
-                db.commit()
+                # Create New Account
+                insert = '''INSERT INTO user (username, name, surname, password) VALUES(?, ?, ?, ?)'''
+                c4.execute(insert, [self.n_username.get(), self.name.get(), self.surname.get(), self.n_password.get()])
+                conn4.commit()
+        except lite.Error as e:
+            print("An error occurred : ", e.args[0])
+        finally:
+            c4.close()
+            conn4.close()
 
     def log(self):
         self.username.set('')
@@ -134,7 +146,7 @@ class MainWindow:
         tk.Entry(self.logf, textvariable=self.password, bd=5, font=('', 15), show='*').grid(row=1, column=1)
         tk.Button(self.logf, text=' Login ', bd=3, font=('', 15), padx=5, pady=5, command=self.client_login).grid()
         tk.Button(self.logf, text=' Create Account ', bd=3, font=('', 15), padx=5, pady=5, command=self.cr).grid(row=2,
-                                                                                                              column=1)
+                                                                                                                 column=1)
         self.logf.pack()
 
         self.crf = tk.Frame(self.master, padx=10, pady=10)
@@ -146,20 +158,26 @@ class MainWindow:
         tk.Entry(self.crf, textvariable=self.surname, bd=5, font=('', 15)).grid(row=2, column=1)
         tk.Label(self.crf, text='Password: ', font=('', 20), pady=5, padx=5).grid(sticky='W')
         tk.Entry(self.crf, textvariable=self.n_password, bd=5, font=('', 15), show='*').grid(row=3, column=1)
-        tk.Button(self.crf, text='Create Account', bd=3, font=('', 15), padx=5, pady=5, command=self.add_new_user).grid()
+        tk.Button(self.crf, text='Create Account', bd=3, font=('', 15), padx=5, pady=5,
+                  command=self.add_new_user).grid()
         tk.Button(self.crf, text='Go to Login', bd=3, font=('', 15), padx=5, pady=5, command=self.log).grid(row=4,
-                                                                                                         column=1)
+                                                                                                            column=1)
 
 
 if __name__ == '__main__':
-
-    with sqlite3.connect('shifts.db') as db:
-        c = db.cursor()
+    try:
+        conn0 = lite.connect('shifts.db')
+        c0 = conn0.cursor()
 
         # CHANGE USERNAME FOR PRIMARY KEY
-        c.execute('''CREATE TABLE IF NOT EXISTS user(username TEXT NOT NULL, name TEXT NOT NULL, surname TEXT NOT NULL, 
-                        password TEXT NOT NULL, employee_id INTEGER PRIMARY KEY);''')
-        db.commit()
+        c0.execute('''CREATE TABLE IF NOT EXISTS user(username TEXT NOT NULL, name TEXT NOT NULL, surname TEXT NOT NULL, 
+                            password TEXT NOT NULL, employee_id INTEGER PRIMARY KEY);''')
+        conn0.commit()
+    except lite.Error as e:
+        print("An error occurred : ", e.args[0])
+    finally:
+        c0.close()
+        conn0.close()
 
     mycolor = '#%02x%02x%02x' % (0, 173, 239)
 
@@ -167,5 +185,3 @@ if __name__ == '__main__':
     root.title('Login form - Shift recorder')
     MainWindow(root)
     root.mainloop()
-
-
