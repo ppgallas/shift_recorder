@@ -102,7 +102,7 @@ class MainWindow:
                 self.name.set(result[0][1])
                 self.surname.set(result[0][2])
                 [x.destroy() for x in self.master.slaves()]
-                label1 = tk.Label(self.master.geometry('250x125'), text='Is your shift today' + self.username.get()+'?')
+                label1 = tk.Label(self.master.geometry('250x125'), text='Is your shift today ' + self.username.get()+'?')
                 ok_button = tk.Button(self.master, text='OK', command=self.register_day)
                 label1.pack(), ok_button.pack()
             else:
@@ -182,9 +182,9 @@ class MainWindow:
         tk.Label(self.crf, text='Password: ', font=('', 20), pady=5, padx=5).grid(sticky='W')
         tk.Entry(self.crf, textvariable=self.n_password, bd=5, font=('', 15), show='*').grid(row=3, column=1)
         tk.Button(self.crf, text='Create Account', bd=3, font=('', 15), padx=5, pady=5,
-                  command=self.add_new_user).grid()
-        tk.Button(self.crf, text='Go to Login', bd=3, font=('', 15), padx=5, pady=5, command=self.log).grid(row=4,
-                                                                                                            column=1)
+                  command=self.add_new_user).grid(row=4, column=1)
+        tk.Button(self.crf, text='Back', bd=3, font=('', 15), padx=5, pady=5, command=self.log).grid(row=4,
+                                                                                                            column=0)
 
 
 if __name__ == '__main__':
